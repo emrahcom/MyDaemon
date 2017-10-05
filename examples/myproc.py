@@ -2,14 +2,13 @@
 # -*- coding:utf-8 -*-
 
 ###############################################################################
-# dosya     : myproc.py
-# ilgili    : emrah.com@gmail.com
+# Sample Python script which run as a background process.
 #
-# daemon.py modulunu kullanan ornek background process. "stop" komutu
-# verilmeden isi biterse kendini duzgun bir sekilde kapatir. Farkli "uniqid"
-# degerleri verilerek istenildigi kadar process baslatilabilir.
+# The process terminates when it finishes its works. Use "stop" parameter to
+# force to stop immediately. Use a unique id as an argument to run multiple
+# instances.
 #
-# Kullanimi:
+# Usage:
 #       myproc.py start|stop|restart uniqid
 #
 ###############################################################################
@@ -19,19 +18,19 @@ import sys
 import time
 import atexit
 import argparse
-from   daemon import Daemon
+from   mydaemon import Daemon
 
-# Daemon mesajlarinda kullanilacak olan daemon adi.
+# Daemon name. It's only used in messages.
 DAEMON_NAME = 'My Background Process (id: #ID#)'
-# Daemon'a cleanstop icin ne kadar sure taninacagi. Bu sure icinde kendini
-# kapamazsa kill edilir.
+# Cleanstop wait time before to kill the process.
 DAEMON_STOP_TIMEOUT = 10
-# Daemon'in Pid numarasini tutan dosya.
+# Daemon pid file.
 PIDFILE = '/tmp/myproc_#ID#.pid'
-# Dongulerin devam edip etmeyeceklerini belirleyen dosya.
+# Deamon run file. "stop" request deletes this file to inform the process and
+# waits DAEMON_STOP_TIMEOUT seconds before to send SIGTERM. The process has a
+# change to stop cleanly if it's written appropriately.
 RUNFILE = '/tmp/myproc_#ID#.run'
-# Debug yapilacak mi? Test ortami icin 1, gercek calisma ortami icin 0
-# Default olarak bu deger, config.py dosyasindan geliyor.
+# Debug mode.
 DEBUG = 0
 
 
@@ -39,8 +38,6 @@ DEBUG = 0
 # -----------------------------------------------------------------------------
 def get_args():
     '''
-    Argumanlari alir, kontrol eder ve bir liste seklinde dondurur.
-
     >>> get_args()
     ('start', 5)
     >>> get_args()
@@ -49,9 +46,9 @@ def get_args():
 
     try:
         parser =  argparse.ArgumentParser()
-        parser.add_argument('action', help='İşlem komutu',
+        parser.add_argument('action', help='action',
                             choices=['start', 'stop', 'restart'])
-        parser.add_argument('uniqid', help='İşlem kodu')
+        parser.add_argument('uniqid', help='Unique ID')
         args = parser.parse_args()
 
         result = (args.action, args.uniqid)
@@ -71,17 +68,13 @@ def get_args():
 class MyProc(Daemon):
     def run(self):
         '''
-        MyProc sinifi, run metodu. Bu siniftan turetilen nesneye 'start'
-        komutu verildiginde, bu bolum calisir.
+        Process start to run here.
         '''
 
-        # Daemon'a kapanma emri gelmeden islem tamamlanirsa run dosyasini
-        # cikista kendi temizleyecek.
+        # Delete the run file at exit. Maybe there will be no stop request.
         atexit.register(self.delrun)
 
-        # Daemona kapanma emri verilirse dongu sona erecek. Kapanma emri
-        # verilip verilmedigini RUNFILE'in varligindan anliyoruz. Dosya varsa
-        # islem bitene kadar calismaya devam eder.
+        # Run while there is no stop request.
         n = 0
         while os.path.exists(RUNFILE):
             print('.')
@@ -95,21 +88,19 @@ class MyProc(Daemon):
 
 
 # -----------------------------------------------------------------------------
-# Program ana bolum. Program, bu bolumden calismaya baslar.
-# -----------------------------------------------------------------------------
 if __name__ == '__main__':
     try:
-        # Argumanlari al.
+        # Get arguments.
         (action, uniqid) = get_args()
 
-        # Daemon nesnesini olustur.
+        # Create daemon object.
         DAEMON_NAME = DAEMON_NAME.replace('#ID#', uniqid)
         PIDFILE = PIDFILE.replace('#ID#', uniqid)
         RUNFILE = RUNFILE.replace('#ID#', uniqid)
         d = MyProc(name=DAEMON_NAME, pidfile=PIDFILE, runfile=RUNFILE,
                      stoptimeout=DAEMON_STOP_TIMEOUT, debug=DEBUG)
 
-        # Islem tipine gore gereken metodu cagir.
+        # Action requested.
         if action == 'start':
             d.start()
         elif action == 'stop':
@@ -117,7 +108,7 @@ if __name__ == '__main__':
         elif action == 'restart':
             d.restart()
         else:
-            raise NameError('Bilinmeyen islem tipi')
+            raise NameError('Unknown action')
 
         sys.exit(0)
     except Exception as err:

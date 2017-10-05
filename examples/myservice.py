@@ -2,13 +2,10 @@
 # -*- coding:utf-8 -*-
 
 ###############################################################################
-# dosya     : mydaemon.py
-# ilgili    : emrah.com@gmail.com
+# Sample Python script which run as a service (daemon).
 #
-# daemon.py modulunu kullanan ornek servis.
-#
-# Kullanimi:
-#       mydaemon.py start|stop|restart
+# Usage:
+#       myservice.py start|stop|restart
 #
 ###############################################################################
 
@@ -16,21 +13,21 @@ import os
 import sys
 import time
 import argparse
-from   daemon import Daemon
+from   mydaemon import Daemon
 
-# Daemon mesajlarinda kullanilacak olan daemon adi.
-DAEMON_NAME = 'My Daemon'
-# Daemon'a cleanstop icin ne kadar sure taninacagi. Bu sure icinde kendini
-# kapamazsa kill edilir.
+# Daemon name. It's only used in messages.
+DAEMON_NAME = 'My Service'
+# Cleanstop wait time before to kill the process.
 DAEMON_STOP_TIMEOUT = 10
-# Daemon'in Pid numarasini tutan dosya.
-PIDFILE = '/tmp/mydaemon.pid'
-# Dongulerin devam edip etmeyeceklerini belirleyen dosya.
-RUNFILE = '/tmp/mydaemon.run'
-# Dongunun her turundan sonra ne kadar sure beklenilecegi (saniye).
+# Daemon pid file.
+PIDFILE = '/tmp/myservice.pid'
+# Deamon run file. "stop" request deletes this file to inform the process and
+# waits DAEMON_STOP_TIMEOUT seconds before to send SIGTERM. The process has a
+# change to stop cleanly if it's written appropriately.
+RUNFILE = '/tmp/myservice.run'
+# Sleep time.
 LOOP_SLEEP = 2
-# Debug yapilacak mi? Test ortami icin 1, gercek calisma ortami icin 0
-# Default olarak bu deger, config.py dosyasindan geliyor.
+# Debug mode.
 DEBUG = 0
 
 
@@ -38,8 +35,6 @@ DEBUG = 0
 # -----------------------------------------------------------------------------
 def get_args():
     '''
-    Argumanlari alir, kontrol eder ve bir liste seklinde dondurur.
-
     >>> get_args()
     ('start',)
     >>> get_args()
@@ -48,7 +43,7 @@ def get_args():
 
     try:
         parser =  argparse.ArgumentParser()
-        parser.add_argument('action', help='İşlem komutu',
+        parser.add_argument('action', help='action',
                             choices=['start', 'stop', 'restart'])
         args = parser.parse_args()
 
@@ -68,17 +63,13 @@ def get_args():
 # -----------------------------------------------------------------------------
 def wait(timeout=60):
     '''
-    Timeout suresince bekletir. Bekleme esnasinda daemon'a kapanma emri gelirse
-    bekleme yapmadan cikar.
-
     >>> wait(20)
     True
     >>> wait(None)
     False
     '''
     try:
-        # Deamona kapanma emri gelmedigi surece timeout suresi kadar beklemede
-        # kal.
+        # Wait [timeout] seconds while there is no stop request.
         t0 = time.time()
         while os.path.exists(RUNFILE) and ((time.time()-t0) < timeout):
             time.sleep(1.0)
@@ -100,18 +91,12 @@ def wait(timeout=60):
 class MyDaemon(Daemon):
     def run(self):
         '''
-        MyDaemon sinifi, run metodu. Bu siniftan turetilen nesneye 'start'
-        komutu verildiginde, bu bolum calisir.
+        Daemon start to run here.
         '''
 
-        # Daemona kapanma emri verilirse dongu sona erecek. Kapanma emri
-        # verilip verilmedigini RUNFILE'in varligindan anliyoruz. Dosya varsa
-        # calismaya devam et.
+        # Run while there is no stop request.
         while os.path.exists(RUNFILE):
             try:
-                # Daemon calisirken buradaki islemleri surekli tekrarlar.
-                pass
-                pass
                 pass
             except Exception as err:
                 if DEBUG:
@@ -119,24 +104,21 @@ class MyDaemon(Daemon):
                 else:
                     sys.stderr.write('%s\n' % (err))
             finally:
-                # Donguyu yeniden baslatmadan once bir sure bekle.
                 wait(timeout=LOOP_SLEEP)
 
 
 
 # -----------------------------------------------------------------------------
-# Program ana bolum. Program, bu bolumden calismaya baslar.
-# -----------------------------------------------------------------------------
 if __name__ == '__main__':
     try:
-        # Argumanlari al.
+        # Get arguments.
         (action, ) = get_args()
 
-        # Daemon nesnesini olustur.
+        # Create daemon object.
         d = MyDaemon(name=DAEMON_NAME, pidfile=PIDFILE, runfile=RUNFILE,
                      stoptimeout=DAEMON_STOP_TIMEOUT, debug=DEBUG)
 
-        # Islem tipine gore gereken metodu cagir.
+        # Action requested.
         if action == 'start':
             d.start()
         elif action == 'stop':
@@ -144,7 +126,7 @@ if __name__ == '__main__':
         elif action == 'restart':
             d.restart()
         else:
-            raise NameError('Bilinmeyen islem tipi')
+            raise NameError('Unknown action')
 
         sys.exit(0)
     except Exception as err:
