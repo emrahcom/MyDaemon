@@ -1,22 +1,43 @@
-# daemon.py
+About
+=====
 Python3 daemon module
 
-## mydaemon.py
-Sample Python script which run as a daemon
+Table of contents
+=================
 
-```
-python mydaemon.py start
-python mydaemon.py restart
-python mydaemon.py stop
+- [About](#about)
+- [Installation](#installation)
+- [Examples](#examples)
+    - [Daemon](#daemon)
+    - [Background process](#background-process)
+
+Installation
+============
+```bash
+pip3 install mydaemon
 ```
 
-## myproc.py
-Sample Python script which run as a background process.
+Examples
+========
+
+Daemon
+------
+See [sample Python script](/examples/myservice.py) which run as a service (daemon)
+
+```bash
+python3 myservice.py start
+python3 myservice.py restart
+python3 myservice.py stop
+```
+
+Background process
+------------------
+See [sample Python script](/examples/myproc.py) which run as a background process.
 Use "stop" parameter to force to stop.
 
-```
-python myproc.py start 1
-python myproc.py start 2
-python myproc.py start 3
-python myproc.py stop 2
+```bash
+python3 myproc.py start 1
+python3 myproc.py start 2
+python3 myproc.py start 3
+python3 myproc.py stop 2
 ```

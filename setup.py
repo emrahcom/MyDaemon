@@ -2,14 +2,14 @@ from setuptools import setup
 
 setup(
     name='mydaemon',
-    version='0.1.7',
+    version='0.1.8',
     packages=['mydaemon'],
     description='Python daemon module',
     url = 'https://github.com/emrahcom/MyDaemon',
     author = 'emrah',
     author_email = 'emrah.com@gmail.com',
     license='MIT',
-    keywords = 'daemon service background',
+    keywords = 'daemon daemonize background service fork',
     python_requires='>=3',
     classifiers=[
         'Development Status :: 4 - Beta',
