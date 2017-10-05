@@ -130,7 +130,7 @@ class Daemon:
         except OSError as e:
             err = str(e)
 
-            if e.find('No such process') > 0:
+            if err.find('No such process') > 0:
                 if os.path.exists(self.pidfile):
                     os.remove(self.pidfile)
             else:

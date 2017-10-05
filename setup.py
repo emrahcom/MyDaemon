@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='mydaemon',
-    version='0.1.8',
+    version='0.1.9',
     packages=['mydaemon'],
     description='Python daemon module',
     url = 'https://github.com/emrahcom/MyDaemon',
