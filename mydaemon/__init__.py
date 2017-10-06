@@ -116,7 +116,6 @@ class Daemon:
             sys.stderr.write('%s is already stopped\n' % self.name)
             sys.exit(1)
 
-        # Daemon'i durdurma islemlerine basla.
         sys.stdout.write('%s is stopping' % self.name)
 
         # Wait for clean stop.
