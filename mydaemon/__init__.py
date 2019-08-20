@@ -102,7 +102,7 @@ class Daemon:
             sys.stderr.write('%s is already running\n' % self.name)
             sys.exit(1)
 
-        sys.stdout.write('%s is startting...\n' % self.name)
+        sys.stdout.write('%s is starting...\n' % self.name)
         self.daemonize()
         self.run()
 
